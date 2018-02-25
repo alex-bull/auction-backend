@@ -1,10 +1,5 @@
 # Template for SENG365 student repo
 
-# Usage
-
-The files in this repo are required to implement the continuous deployment process for the 2017 SENG365 assignments. This repo is intended to be used as the `template-url` argument the `create-repos.js` script from the seng365/gitlab-setup repo, for example:
- 
-`node create-repos.js --private-token=<your gitlab private token> --env=production --template-url=<this repo>`
 
 # Overview of the continuous deployment process
 
