@@ -1,12 +1,15 @@
 {
   "name": "SENG365-Auction-Site-API",
   "version": "0.0.1",
+  "author": "Alex Bull <abu59@uclive.ac.nz>",
+  "main": "app.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "body-parser": "^1.18.2",
     "express": "^4.16.3",
-    "mysql": "^2.15.0"
+    "mysql": "^2.15.0",
+    "node": "^9.8.0"
   }
 }
