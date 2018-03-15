@@ -1,9 +1,3 @@
-# MySQL scripts for dropping existing tables and recreating the database table structure
-# version  0.0.4; 14 March 2018
-# Note: WebStorm throws an annoying error 'expecting one of the following: ALGORITHM DEFINER SQL VIEW'. This is an erroneous error and the script should run successfully despite this error.
-
-# Tables must be dropped in a particular order due to referential constraints i.e. foreign keys.
-
 DROP TABLE IF EXISTS bid;
 DROP TABLE IF EXISTS photo;
 DROP TABLE IF EXISTS auction;
