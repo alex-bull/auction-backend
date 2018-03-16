@@ -41,6 +41,14 @@ exports.getAll = function(req, done){
     'ORDER BY auction_startingdate');
     db.get_pool().query(searchQuery.join(''), function (err, rows){
 
+        if(req.query.startIndex){
+            rows = rows.copyWithin(0, req.query.startIndex);
+        }
+
+        if(req.query['count']){
+            rows = rows.slice(0, req.query['count']);
+        }
+
         if(err) return done({"ERROR": "Error selecting"});
 
         return done(rows);
