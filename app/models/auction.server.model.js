@@ -25,12 +25,16 @@ exports.getAll = function(req, done){
     }
 
     if(req.query.seller){
-        searchQuery.push('AND auction_id = ANY (SELECT auction_id FROM auction WHERE auction_userid=' + req.query.seller + ') ');
+        searchQuery.push('AND auction_userid=' + req.query.seller + ' ');
     }
 
     if(req.query.bidder){
-        searchQuery.push('AND auction_id = ANY (SELECT bid_auctionid FROM bid WHERE bid_userid=' + req.query.bidder + ') ');
+        searchQuery.push('AND bid_userid=' + req.query.bidder + ' ');
     }
+
+    // if(req.query.bidder){
+    //     searchQuery.push('AND auction_id = ANY (SELECT bid_auctionid, MAX() FROM bid WHERE bid_userid=' + req.query.bidder + ') ');
+    // }
 
 
     searchQuery.push('GROUP BY auction_id ' +
