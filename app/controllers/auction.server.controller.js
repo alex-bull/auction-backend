@@ -1,7 +1,7 @@
 const Auction = require('../models/auction.server.model');
 
 exports.list = function(req, res){
-    Auction.getAll(function(result){
+    Auction.getAll(req, function(result){
         res.json(result);
     });
 };
