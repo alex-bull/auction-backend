@@ -24,6 +24,15 @@ exports.getAll = function(req, done){
         searchQuery.push('AND auction_categoryid=' + req.query['category-id'] + ' ');
     }
 
+    if(req.query.seller){
+        searchQuery.push('AND auction_id = ANY (SELECT auction_id FROM auction WHERE auction_userid=' + req.query.seller + ') ');
+    }
+
+    if(req.query.bidder){
+        searchQuery.push('AND auction_id = ANY (SELECT bid_auctionid FROM bid WHERE bid_userid=' + req.query.bidder + ') ');
+    }
+
+
     searchQuery.push('GROUP BY auction_id ' +
     'ORDER BY auction_startingdate');
     db.get_pool().query(searchQuery.join(''), function (err, rows){
