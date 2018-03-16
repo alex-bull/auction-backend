@@ -4,6 +4,7 @@ const fs = require('fs');
 const resetQuery = fs.readFileSync("create_database.sql", 'utf8');
 const resampleQuery = fs.readFileSync("load_data.sql", 'utf8');
 
+let loggedInUserId = 1;
 
 exports.getAll = function(done){
     db.get_pool().query('SELECT auction_id AS id, category_title AS categoryTitle, ' +
@@ -27,18 +28,18 @@ exports.getOne = function(){
 };
 
 exports.insert = function(auction, done){
-    let values = [auction.auction_title,
-        auction.auction_categoryid,
-        auction.auction_description,
-        auction.auction_reserveprice,
-        auction.auction_startingprice,
-        new Date(auction.auction_creationdate),
-        new Date(auction.auction_startingdate),
-        new Date(auction.auction_endingdate),
-        auction.auction_userid];
-    db.get_pool().query('INSERT INTO auction (auction_title, auction_categoryid, auction_description, ' +
-        'auction_reserveprice, auction_startingprice, auction_creationdate, auction_startingdate, ' +
-        'auction_endingdate, auction_userid) VALUES (?);', [values], function(err, result){
+    let values = [auction.categoryId,
+        auction.title,
+        auction.description,
+        new Date(auction.startDateTime),
+        new Date(auction.endDateTime),
+        auction.reservePrice,
+        auction.startingBid,
+        loggedInUserId];
+    db.get_pool().query('INSERT INTO auction (auction_categoryid, auction_title, ' +
+        'auction_description, auction_startingdate, ' +
+        'auction_endingdate, auction_reserveprice, ' +
+        'auction_startingprice, auction_userid) VALUES (?);', [values], function(err, result){
 
         if (err) return done(err);
 
