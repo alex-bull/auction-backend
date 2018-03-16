@@ -13,7 +13,7 @@ exports.getAll = function(req, done){
     'MAX(bid_amount) AS currentBid ' +
     'FROM auction ' +
     'JOIN category ON auction.auction_categoryid = category.category_id ' +
-    'JOIN bid ON auction.auction_id = bid.bid_auctionid ' +
+    'LEFT JOIN bid ON auction.auction_id = bid.bid_auctionid ' +
     'WHERE auction_id!="null" '];
 
     if(req.query.q){
