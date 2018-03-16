@@ -1,13 +1,16 @@
 const Auction = require('../models/auction.server.model');
 
 exports.list = function(req, res){
-    Auction.getAll(function(result){
+    Auction.getAll(req, function(result){
         res.json(result);
     });
 };
 
 exports.create = function(req, res){
-    return null;
+    let body = req.body;
+    Auction.insert(body, function(result){
+        res.json(result);
+    });
 };
 
 exports.resetDB = function(req, res){
