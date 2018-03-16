@@ -1,0 +1,11 @@
+{
+    "auction_title": "Super cape test",
+    "auction_categoryid": 1,
+    "auction_description": "One slightly used cape",
+    "auction_reserveprice": 10.00,
+    "auction_startingprice": 0.01,
+    "auction_creationdate": "2018-02-14 00:00:01",
+    "auction_startingdate": "2018-02-15 00:00:01",
+    "auction_endingdate": "2018-03-14 00:00:00",
+    "auction_userid": 2
+}

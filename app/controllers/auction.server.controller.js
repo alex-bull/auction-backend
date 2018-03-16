@@ -7,7 +7,10 @@ exports.list = function(req, res){
 };
 
 exports.create = function(req, res){
-    return null;
+    let body = req.body;
+    Auction.insert(body, function(result){
+        res.json(result);
+    });
 };
 
 exports.resetDB = function(req, res){
