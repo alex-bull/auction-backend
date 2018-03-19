@@ -24,3 +24,29 @@ exports.resampleDB = function(req, res){
         res.json(result);
     });
 };
+
+exports.findId = function(req, res){
+    Auction.getOne(req, function(result){
+        res.json(result);
+    });
+};
+
+exports.findBids = function(req, res){
+    Auction.getBids(req, function(result){
+        res.json(result);
+    });
+};
+
+exports.postBid = function(req, res){
+    let body = req.body;
+    Auction.createBid(body, req, function(result){
+        res.json(result);
+    });
+};
+
+exports.patchAuction = function(req, res){
+    let body = req.body;
+    Auction.updateAuction(body, req, function(result){
+        res.json(result);
+    });
+};

@@ -5,6 +5,14 @@ module.exports = function(app){
         .get(auctions.list)
         .post(auctions.create);
 
+    app.route('/auctions/:id')
+        .get(auctions.findId)
+        .patch(auctions.patchAuction);
+
+    app.route('/auctions/:id/bids')
+        .get(auctions.findBids)
+        .post(auctions.postBid);
+
     app.route('/reset')
         .post(auctions.resetDB);
 
