@@ -152,6 +152,8 @@ exports.createBid = function(body, req, done){
 };
 
 exports.updateAuction = function(body, req, done){
+    let startDate = new Date(body.startDateTime);
+    let endDate = new Date(body.endDateTime);
     let searchQuery = ['UPDATE auction ' +
     'SET auction_id = auction_id '];
 
@@ -168,11 +170,11 @@ exports.updateAuction = function(body, req, done){
     }
 
     if(body.startDateTime){
-        searchQuery.push(', auction_startingdate = ' + body.startDateTime + ' ');
+        searchQuery.push(', auction_startingdate = "' + startDate.toISOString() + '" ');
     }
 
     if(body.endDateTime){
-        searchQuery.push(', auction_endingdate = ' + body.endDateTime + ' ');
+        searchQuery.push(', auction_endingdate = "' + endDate.toISOString() + '" ');
     }
 
     if(body.reservePrice){
@@ -185,11 +187,57 @@ exports.updateAuction = function(body, req, done){
 
     searchQuery.push('WHERE auction_id=' + req.params['id']);
 
-    console.log(searchQuery);
+    console.log(endDate.getTime());
     db.get_pool().query(searchQuery.join(''), function (err, rows){
 
         if(err) return done({"ERROR": "Error updating"});
 
         return done(rows);
     });
+};
+
+exports.createUser = function(body, done){
+    let values = [body.username, body.givenName, body.familyName, body.email, body.password];
+    db.get_pool().query('INSERT INTO auction_user (user_username, user_givenname, ' +
+        'user_familyname, user_email, user_password) VALUES (?);', [values], function(err, result){
+
+        if (err) return done(err);
+
+        return done(result);
+    });
+};
+
+exports.loginUser = function(req, done){
+
+    if(req.query.password) {
+
+        db.get_pool().query('SELECT user_password, user_id ' +
+            'FROM auction_user ' +
+            'WHERE user_username="' + req.query.username + '" OR user_email="' + req.query.email + '" ',
+            function (err, userDetails) {
+
+                if (err) return done("Error finding user in database");
+
+                if(userDetails.length > 0){
+
+                    if(userDetails[0].user_password === req.query.password) {
+                    loggedInUserId = userDetails[1];
+                    return done("Log in successful");
+
+                } else {
+                    return done("Incorrect password");
+                }
+
+            } else {
+                    return done("User not in database");
+                }
+        });
+    } else {
+        return done("Please input a password")
+    }
+};
+
+exports.logoutUser = function(done){
+    loggedInUserId = null;
+    return done("Logged out");
 };

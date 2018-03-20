@@ -50,3 +50,22 @@ exports.patchAuction = function(req, res){
         res.json(result);
     });
 };
+
+exports.postUser = function(req, res){
+    let body = req.body;
+    Auction.createUser(body, function(result){
+        res.json(result);
+    });
+};
+
+exports.login = function(req, res){
+    Auction.loginUser(req, function(result){
+        res.json(result);
+    });
+};
+
+exports.logout = function(req, res){
+    Auction.logoutUser(function(result){
+        res.json(result);
+    });
+};

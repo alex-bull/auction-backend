@@ -18,4 +18,13 @@ module.exports = function(app){
 
     app.route('/resample')
         .post(auctions.resampleDB);
+
+    app.route('/user')
+        .post(auctions.postUser);
+
+    app.route('/user/login')
+        .post(auctions.login);
+
+    app.route('/user/logout')
+        .post(auctions.logout);
 };
