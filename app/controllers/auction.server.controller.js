@@ -1,7 +1,7 @@
 const Auction = require('../models/auction.server.model');
 
 exports.list = function(req, res){
-    Auction.getAll(req, function(result){
+    Auction.getAll(req, res, function(result){
         res.json(result);
     });
 };
@@ -79,6 +79,13 @@ exports.findUser = function(req, res){
 exports.patchUser = function(req, res){
     let body = req.body;
     Auction.updateUser(body, req, function(result){
+        res.json(result);
+    });
+};
+
+exports.postPhoto = function(req, res){
+    let body = req.body;
+    Auction.addPhoto(req, function(result){
         res.json(result);
     });
 };

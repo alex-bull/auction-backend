@@ -13,6 +13,9 @@ module.exports = function(app){
         .get(auctions.findBids)
         .post(auctions.postBid);
 
+    app.route('/auctions/:id/photos')
+        .post(auctions.postPhoto);
+
     app.route('/reset')
         .post(auctions.resetDB);
 

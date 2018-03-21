@@ -5,9 +5,9 @@ const moment = require('moment');
 const resetQuery = fs.readFileSync("create_database.sql", 'utf8');
 const resampleQuery = fs.readFileSync("load_data.sql", 'utf8');
 
-let loggedInUserId = 1;
+let loggedInUserId = null;
 
-exports.getAll = function(req, done){
+exports.getAll = function(req, res, done){
     let searchQuery = ['SELECT auction_id AS id, category_title AS categoryTitle, ' +
     'auction_categoryid AS categoryId, auction_title AS title, auction_reserveprice AS reservePrice, ' +
     'auction_startingdate AS startDateTime, auction_endingdate AS endDateTime, ' +
@@ -45,8 +45,12 @@ exports.getAll = function(req, done){
             rows = rows.slice(0, req.query['count']);
         }
 
-        if(err) return done({"ERROR": "Error selecting"});
+        if(err){
+            res.status(400);
+            return done("Bad request.");
+        }
 
+        res.status(200);
         return done(rows);
     });
 };
@@ -92,10 +96,6 @@ exports.insert = function(auction, done){
 
         return done(result);
     });
-};
-
-exports.remove = function(){
-    return null;
 };
 
 exports.reset = function(done){
@@ -298,5 +298,19 @@ exports.updateUser = function(body, req, done){
         if(err) return done({"ERROR": "Error updating"});
 
         return done(rows);
+    });
+};
+
+exports.addPhoto = function(req, done){
+
+    let uri = req.pipe(fs.createWriteStream('photos/' + moment()));
+
+    let values = [req.params['id'], uri.path];
+    db.get_pool().query('INSERT INTO photo (photo_auctionid, photo_image_URI) ' +
+        'VALUES (?);', [values], function(err, result){
+
+        if (err) return done(err);
+
+        return done(result);
     });
 };
