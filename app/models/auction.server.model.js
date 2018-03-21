@@ -314,3 +314,17 @@ exports.addPhoto = function(req, done){
         return done(result);
     });
 };
+
+exports.getPhoto = function(req, done){
+
+    db.get_pool().query('SELECT photo_image_URI ' +
+        'FROM photo ' +
+        'WHERE photo_auctionid=' + req.params['id'], function(err, result){
+
+        if (err) return done(err);
+
+        let photoData = fs.readFileSync(result[0].photo_image_URI, 'utf8');
+
+        return done(photoData);
+    });
+};

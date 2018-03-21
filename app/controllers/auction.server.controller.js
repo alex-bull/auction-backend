@@ -84,8 +84,13 @@ exports.patchUser = function(req, res){
 };
 
 exports.postPhoto = function(req, res){
-    let body = req.body;
     Auction.addPhoto(req, function(result){
         res.json(result);
+    });
+};
+
+exports.findPhoto = function(req, res){
+    Auction.getPhoto(req, function(result){
+        res.send(result);
     });
 };
