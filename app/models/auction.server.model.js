@@ -56,32 +56,43 @@ exports.getAll = function(req, res, done){
 };
 
 exports.getOne = function(req, res, done){
-    if(req.params['id']){
-        db.get_pool().query('SELECT auction_categoryid AS categoryId, category_title AS categoryTitle, ' +
-            'auction_title AS title, auction_reserveprice AS reservePrice, ' +
-            'auction_startingdate AS startDateTime, auction_endingdate AS endDateTime, ' +
-            'auction_description AS description, auction_creationdate AS creationDateTime, ' +
-            'auction_userid AS id, user_username AS username, auction_startingprice as startingBid, ' +
-            'MAX(bid_amount) AS currentBid ' +
-            'FROM auction ' +
-            'JOIN auction_user ON auction.auction_userid=auction_user.user_id ' +
-            'LEFT JOIN bid ON auction.auction_id = bid.bid_auctionid ' +
-            'JOIN category ON auction.auction_categoryid = category.category_id ' +
-            'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-            if (err){
-                res.status(400);
-                return done("Bad request");
-            }
+    db.get_pool().query('SELECT * ' +
+        'FROM auction ' +
+        'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-            res.status(200);
-            return done(rows);
+        if (rows.length === 0) {
+            res.status(404);
+            return done("Not found");
+        }
 
-        });
-    } else {
-        res.status(404);
-        return done("Not found");
-    }
+        if (req.params['id']) {
+            db.get_pool().query('SELECT auction_categoryid AS categoryId, category_title AS categoryTitle, ' +
+                'auction_title AS title, auction_reserveprice AS reservePrice, ' +
+                'auction_startingdate AS startDateTime, auction_endingdate AS endDateTime, ' +
+                'auction_description AS description, auction_creationdate AS creationDateTime, ' +
+                'auction_userid AS id, user_username AS username, auction_startingprice as startingBid, ' +
+                'MAX(bid_amount) AS currentBid ' +
+                'FROM auction ' +
+                'JOIN auction_user ON auction.auction_userid=auction_user.user_id ' +
+                'LEFT JOIN bid ON auction.auction_id = bid.bid_auctionid ' +
+                'JOIN category ON auction.auction_categoryid = category.category_id ' +
+                'WHERE auction_id=' + req.params['id'], function (err, rows) {
+
+                if (err) {
+                    res.status(400);
+                    return done("Bad request");
+                }
+
+                res.status(200);
+                return done(rows);
+
+            });
+        } else {
+            res.status(404);
+            return done("Not found");
+        }
+    });
 };
 
 exports.insert = function(auction, res, done){
@@ -358,7 +369,7 @@ exports.getUser = function(req, res, done){
 
 exports.updateUser = function(body, req, res, done){
 
-    if (req.params['id'] !== loggedInUserId) {
+    if (parseInt(req.params['id']) !== parseInt(loggedInUserId)) {
         res.status(401);
         return done("Unauthorized");
     }
@@ -407,12 +418,12 @@ exports.addPhoto = function(req, res, done){
         'FROM auction ' +
         'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-        if (rows.length = 0) {
+        if (rows.length === 0) {
             res.status(404);
             return done("Not found");
         }
 
-        if (req.params['id'] !== loggedInUserId) {
+        if (parseInt(req.params['id']) !== parseInt(loggedInUserId)) {
             res.status(401);
             return done("Unauthorized");
         }
@@ -440,7 +451,7 @@ exports.getPhoto = function(req, res, done){
         'FROM auction ' +
         'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-        if (rows.length = 0) {
+        if (rows.length === 0) {
             res.status(404);
             return done("Not found");
         }
@@ -452,6 +463,11 @@ exports.getPhoto = function(req, res, done){
             if (err){
                 res.status(400);
                 return done("Bad request");
+            }
+
+            if (result.length === 0) {
+                res.status(404);
+                return done("Not found");
             }
 
             let photoData = fs.readFileSync(result[0].photo_image_URI, 'utf8');
@@ -467,12 +483,12 @@ exports.removePhoto = function(req, res, done){
         'FROM auction ' +
         'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-        if (rows.length = 0) {
+        if (rows.length === 0) {
             res.status(404);
             return done("Not found");
         }
 
-        if (req.params['id'] !== loggedInUserId) {
+        if (parseInt(req.params['id']) !== (loggedInUserId)) {
             res.status(401);
             return done("Unauthorized");
         }

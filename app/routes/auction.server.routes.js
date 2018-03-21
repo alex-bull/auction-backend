@@ -24,16 +24,16 @@ module.exports = function(app){
     app.route('/resample')
         .post(auctions.resampleDB);
 
-    app.route('/user')
+    app.route('/users')
         .post(auctions.postUser);
 
-    app.route('/user/login')
+    app.route('/users/login')
         .post(auctions.login);
 
-    app.route('/user/logout')
+    app.route('/users/logout')
         .post(auctions.logout);
 
-    app.route('/user/:id')
+    app.route('/users/:id')
         .get(auctions.findUser)
         .patch(auctions.patchUser);
 };
