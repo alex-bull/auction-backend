@@ -55,7 +55,7 @@ exports.getAll = function(req, res, done){
     });
 };
 
-exports.getOne = function(req, done){
+exports.getOne = function(req, res, done){
     if(req.params['id']){
         db.get_pool().query('SELECT auction_categoryid AS categoryId, category_title AS categoryTitle, ' +
             'auction_title AS title, auction_reserveprice AS reservePrice, ' +
@@ -69,16 +69,27 @@ exports.getOne = function(req, done){
             'JOIN category ON auction.auction_categoryid = category.category_id ' +
             'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-            if (err) return done({"ERROR": "Error selecting"});
+            if (err){
+                res.status(400);
+                return done("Bad request");
+            }
 
+            res.status(200);
             return done(rows);
+
         });
     } else {
-        return done("No ID entered");
+        res.status(404);
+        return done("Not found");
     }
 };
 
-exports.insert = function(auction, done){
+exports.insert = function(auction, res, done){
+    if(loggedInUserId == null){
+        res.status(401);
+        return done("Unauthorized");
+    }
+
     let values = [auction.categoryId,
         auction.title,
         auction.description,
@@ -92,31 +103,43 @@ exports.insert = function(auction, done){
         'auction_endingdate, auction_reserveprice, ' +
         'auction_startingprice, auction_userid) VALUES (?);', [values], function(err, result){
 
-        if (err) return done(err);
+        if (err){
+            res.status(400);
+            return done("Bad request.");
+        }
 
+        res.status(200);
         return done(result);
     });
 };
 
-exports.reset = function(done){
+exports.reset = function(res, done){
     db.get_pool().query(resetQuery, function (err, rows) {
 
-        if (err) return done({"ERROR": "Error reseting"});
+        if (err){
+            res.status(400);
+            return done("Bad request.");
+        }
 
+        res.status(200);
         return done(rows);
     });
 };
 
-exports.resample = function(done){
-    db.get_pool().query(resetQuery + resampleQuery, function (err, rows) {
+exports.resample = function(res, done){
+    db.get_pool().query(resetQuery + resampleQuery, function (err) {
 
-        if (err) return done({"ERROR": "Error resampling"});
+        if (err){
+            res.status(400);
+            return done("Bad request.");
+        }
 
-        return done(rows);
+        res.status(201);
+        return done("Sample of data has been reloaded.");
     });
 };
 
-exports.getBids = function(req, done){
+exports.getBids = function(req, res, done){
     if(req.params['id']){
         db.get_pool().query('SELECT bid_amount AS amount, bid_datetime AS datetime, ' +
             'bid_userid AS buyerId, user_username AS buyerUsername ' +
@@ -124,17 +147,32 @@ exports.getBids = function(req, done){
             'JOIN auction_user ON bid.bid_userid=auction_user.user_id ' +
             'WHERE bid_auctionid=' + req.params['id'], function (err, rows) {
 
-            if (err) return done({"ERROR": "Error selecting"});
+            if (err){
+                res.status(400);
+                return done("Bad request.");
+            }
 
+            if(rows.length === 0){
+                res.status(404);
+                return done("Not found");
+            }
+
+            res.status(200);
             return done(rows);
         });
     } else {
-        return done("No ID entered");
+        res.status(404);
+        return done("Not found");
     }
 };
 
-exports.createBid = function(body, req, done){
-    if(req.query.amount) {
+exports.createBid = function(body, req, res, done){
+    if(loggedInUserId == null){
+        res.status(401);
+        return done("Unauthorized");
+    }
+
+    if(req.params['id']) {
         let values = [req.params['id'],
             req.query.amount,
             new Date(moment()),
@@ -142,60 +180,91 @@ exports.createBid = function(body, req, done){
         db.get_pool().query('INSERT INTO bid (bid_auctionid, bid_amount, ' +
             'bid_datetime, bid_userid) VALUES (?);', [values], function (err, result) {
 
-            if (err) return done(err);
+            if (err){
+                res.status(400);
+                return done("Bad request.");
+            }
 
+            res.status(200);
             return done(result);
         });
     } else {
-        return done("No bid amount selected.");
+        res.status(404);
+        return done("Not found");
     }
 };
 
-exports.updateAuction = function(body, req, done){
-    let startDate = new Date(body.startDateTime);
-    let endDate = new Date(body.endDateTime);
-    let searchQuery = ['UPDATE auction ' +
-    'SET auction_id = auction_id '];
+exports.updateAuction = function(body, req, res, done){
 
-    if(body.categoryId){
-        searchQuery.push(', auction_categoryid = ' + body.categoryId + ' ');
-    }
+    db.get_pool().query('SELECT auction_userid, COUNT(bid_id) ' +
+        'FROM auction ' +
+        'JOIN bid ON auction.auction_id=bid_auctionid ' +
+        'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-    if(body.title){
-        searchQuery.push(', auction_title = "' + body.title + '" ');
-    }
+        if (err) {
+            res.status(400);
+            return done("Bad request.");
+        }
 
-    if(body.description){
-        searchQuery.push(', auction_description = "' + body.description + '" ');
-    }
+        if (parseInt(loggedInUserId) !== parseInt(rows[0].auction_userid)) {
+            res.status(401);
+            return done("Unauthorized");
+        }
 
-    if(body.startDateTime){
-        searchQuery.push(', auction_startingdate = "' + startDate.toISOString() + '" ');
-    }
+        if (rows[0]['COUNT(bid_id)'] > 0) {
+            res.status(403);
+            return done("Forbidden - bidding has begun on the auction.");
+        }
 
-    if(body.endDateTime){
-        searchQuery.push(', auction_endingdate = "' + endDate.toISOString() + '" ');
-    }
+        let startDate = new Date(body.startDateTime);
+        let endDate = new Date(body.endDateTime);
+        let searchQuery = ['UPDATE auction ' +
+        'SET auction_id = auction_id '];
 
-    if(body.reservePrice){
-        searchQuery.push(', auction_reserveprice = ' + body.reservePrice + ' ');
-    }
+        if(body.categoryId){
+            searchQuery.push(', auction_categoryid = ' + body.categoryId + ' ');
+        }
 
-    if(body.startingBid){
-        searchQuery.push(', auction_startingprice = ' + body.startingBid + ' ');
-    }
+        if(body.title){
+            searchQuery.push(', auction_title = "' + body.title + '" ');
+        }
 
-    searchQuery.push('WHERE auction_id=' + req.params['id']);
+        if(body.description){
+            searchQuery.push(', auction_description = "' + body.description + '" ');
+        }
 
-    db.get_pool().query(searchQuery.join(''), function (err, rows){
+        if(body.startDateTime){
+            searchQuery.push(', auction_startingdate = "' + startDate.toISOString() + '" ');
+        }
 
-        if(err) return done({"ERROR": "Error updating"});
+        if(body.endDateTime){
+            searchQuery.push(', auction_endingdate = "' + endDate.toISOString() + '" ');
+        }
 
-        return done(rows);
+        if(body.reservePrice){
+            searchQuery.push(', auction_reserveprice = ' + body.reservePrice + ' ');
+        }
+
+        if(body.startingBid){
+            searchQuery.push(', auction_startingprice = ' + body.startingBid + ' ');
+        }
+
+        searchQuery.push('WHERE auction_id=' + req.params['id']);
+
+        db.get_pool().query(searchQuery.join(''), function (err, rows){
+
+            if(err){
+                res.status(400);
+                return done("Bad request.");
+            }
+
+            res.status(201);
+            return done(rows);
+        });
     });
 };
 
-exports.createUser = function(body, done){
+exports.createUser = function(body, res, done){
     let values = [body.username, body.givenName, body.familyName, body.email, body.password];
     db.get_pool().query('INSERT INTO auction_user (user_username, user_givenname, ' +
         'user_familyname, user_email, user_password) VALUES (?);', [values], function(err, result){
@@ -206,7 +275,7 @@ exports.createUser = function(body, done){
     });
 };
 
-exports.loginUser = function(req, done){
+exports.loginUser = function(req, res, done){
 
     if(req.query.password) {
 
