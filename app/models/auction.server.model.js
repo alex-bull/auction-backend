@@ -202,8 +202,8 @@ exports.updateAuction = function(body, req, res, done){
         'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
         if (err) {
-            res.status(400);
-            return done("Bad request.");
+            res.status(500);
+            return done("Internal server error");
         }
 
         if (parseInt(loggedInUserId) !== parseInt(rows[0].auction_userid)) {
@@ -269,8 +269,12 @@ exports.createUser = function(body, res, done){
     db.get_pool().query('INSERT INTO auction_user (user_username, user_givenname, ' +
         'user_familyname, user_email, user_password) VALUES (?);', [values], function(err, result){
 
-        if (err) return done(err);
+        if (err){
+            res.status(400);
+            return done("Malformed request");
+        }
 
+        res.status(201);
         return done(result);
     });
 };
@@ -284,33 +288,45 @@ exports.loginUser = function(req, res, done){
             'WHERE user_username="' + req.query.username + '" OR user_email="' + req.query.email + '" ',
             function (err, userDetails) {
 
-                if (err) return done("Error finding user in database");
+                if (err){
+                    res.status(400);
+                    return done("Invalid username/email/password supplied");
+                }
 
                 if(userDetails.length > 0){
 
                     if(userDetails[0].user_password === req.query.password) {
                     loggedInUserId = userDetails[0].user_id;
+                    res.status(200);
                     return done("Log in successful");
 
                 } else {
-                    return done("Incorrect password");
+                        res.status(400);
+                        return done("Invalid username/email/password supplied");
                 }
 
             } else {
+                    res.status(400);
                     return done("User not in database");
                 }
         });
     } else {
+        res.status(400);
         return done("Please input a password")
     }
 };
 
-exports.logoutUser = function(done){
+exports.logoutUser = function(res, done){
+    if(loggedInUserId == null){
+        res.status(401);
+        return done("Unauthorized");
+    }
     loggedInUserId = null;
+    res.status(200);
     return done("Logged out");
 };
 
-exports.getUser = function(req, done){
+exports.getUser = function(req, res, done){
 
     let searchQuery = ['SELECT user_username AS username, user_givenname AS givenName, ' +
         'user_familyname AS familyName '];
@@ -325,17 +341,28 @@ exports.getUser = function(req, done){
     if(req.params['id']){
         db.get_pool().query(searchQuery.join(''), function (err, rows) {
 
-            if (err) return done({"ERROR": "Error selecting"});
+            if (err || rows.length === 0){
+                res.status(404);
+                return done("Not found");
+            }
 
+            res.status(200);
             return done(rows);
         });
     } else {
-        return done("No ID entered");
+        res.status(404);
+        return done("Not found");
     }
 };
 
 
-exports.updateUser = function(body, req, done){
+exports.updateUser = function(body, req, res, done){
+
+    if (req.params['id'] !== loggedInUserId) {
+        res.status(401);
+        return done("Unauthorized");
+    }
+
     let searchQuery = ['UPDATE auction_user ' +
     'SET user_id = user_id'];
 
@@ -364,47 +391,101 @@ exports.updateUser = function(body, req, done){
 
     db.get_pool().query(searchQuery.join(''), function (err, rows){
 
-        if(err) return done({"ERROR": "Error updating"});
+        if(err){
+            res.status(400);
+            return done("Bad request");
+        }
 
+        res.status(201);
         return done(rows);
     });
 };
 
-exports.addPhoto = function(req, done){
+exports.addPhoto = function(req, res, done){
 
-    let uri = req.pipe(fs.createWriteStream('photos/' + moment()));
+    db.get_pool().query('SELECT * ' +
+        'FROM auction ' +
+        'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-    let values = [req.params['id'], uri.path];
-    db.get_pool().query('INSERT INTO photo (photo_auctionid, photo_image_URI) ' +
-        'VALUES (?);', [values], function(err, result){
+        if (rows.length = 0) {
+            res.status(404);
+            return done("Not found");
+        }
 
-        if (err) return done(err);
+        if (req.params['id'] !== loggedInUserId) {
+            res.status(401);
+            return done("Unauthorized");
+        }
 
-        return done(result);
+        let uri = req.pipe(fs.createWriteStream('photos/' + moment()));
+
+        let values = [req.params['id'], uri.path];
+        db.get_pool().query('INSERT INTO photo (photo_auctionid, photo_image_URI) ' +
+            'VALUES (?);', [values], function (err, result) {
+
+            if (err) {
+                res.status(400);
+                return done("Bad request");
+            }
+
+            res.status(201);
+            return done(result);
+        });
     });
 };
 
-exports.getPhoto = function(req, done){
+exports.getPhoto = function(req, res, done){
 
-    db.get_pool().query('SELECT photo_image_URI ' +
-        'FROM photo ' +
-        'WHERE photo_auctionid=' + req.params['id'], function(err, result){
+    db.get_pool().query('SELECT * ' +
+        'FROM auction ' +
+        'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-        if (err) return done(err);
+        if (rows.length = 0) {
+            res.status(404);
+            return done("Not found");
+        }
 
-        let photoData = fs.readFileSync(result[0].photo_image_URI, 'utf8');
+        db.get_pool().query('SELECT photo_image_URI ' +
+            'FROM photo ' +
+            'WHERE photo_auctionid=' + req.params['id'], function (err, result) {
 
-        return done(photoData);
+            if (err){
+                res.status(400);
+                return done("Bad request");
+            }
+
+            let photoData = fs.readFileSync(result[0].photo_image_URI, 'utf8');
+
+            return done(photoData);
+        });
     });
 };
 
-exports.removePhoto = function(req, done){
+exports.removePhoto = function(req, res, done){
 
-    db.get_pool().query('DELETE FROM photo ' +
-        'WHERE photo_auctionid=' + req.params['id'], function(err, result){
+    db.get_pool().query('SELECT * ' +
+        'FROM auction ' +
+        'WHERE auction_id=' + req.params['id'], function (err, rows) {
 
-        if (err) return done(err);
+        if (rows.length = 0) {
+            res.status(404);
+            return done("Not found");
+        }
 
-        return done(result);
+        if (req.params['id'] !== loggedInUserId) {
+            res.status(401);
+            return done("Unauthorized");
+        }
+
+        db.get_pool().query('DELETE FROM photo ' +
+            'WHERE photo_auctionid=' + req.params['id'], function (err, result) {
+
+            if (err){
+                res.status(400);
+                return done("Bad request");
+            }
+
+            return done(result);
+        });
     });
 };
