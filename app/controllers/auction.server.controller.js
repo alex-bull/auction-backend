@@ -94,3 +94,9 @@ exports.findPhoto = function(req, res){
         res.send(result);
     });
 };
+
+exports.deletePhoto = function(req, res){
+    Auction.removePhoto(req, function(result){
+        res.json(result);
+    });
+};

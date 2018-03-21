@@ -15,7 +15,8 @@ module.exports = function(app){
 
     app.route('/auctions/:id/photos')
         .post(auctions.postPhoto)
-        .get(auctions.findPhoto);
+        .get(auctions.findPhoto)
+        .delete(auctions.deletePhoto);
 
     app.route('/reset')
         .post(auctions.resetDB);

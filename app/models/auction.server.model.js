@@ -328,3 +328,14 @@ exports.getPhoto = function(req, done){
         return done(photoData);
     });
 };
+
+exports.removePhoto = function(req, done){
+
+    db.get_pool().query('DELETE FROM photo ' +
+        'WHERE photo_auctionid=' + req.params['id'], function(err, result){
+
+        if (err) return done(err);
+
+        return done(result);
+    });
+};
