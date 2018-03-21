@@ -69,3 +69,16 @@ exports.logout = function(req, res){
         res.json(result);
     });
 };
+
+exports.findUser = function(req, res){
+    Auction.getUser(req, function(result){
+        res.json(result);
+    });
+};
+
+exports.patchUser = function(req, res){
+    let body = req.body;
+    Auction.updateUser(body, req, function(result){
+        res.json(result);
+    });
+};

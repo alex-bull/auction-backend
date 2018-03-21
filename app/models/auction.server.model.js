@@ -187,7 +187,6 @@ exports.updateAuction = function(body, req, done){
 
     searchQuery.push('WHERE auction_id=' + req.params['id']);
 
-    console.log(endDate.getTime());
     db.get_pool().query(searchQuery.join(''), function (err, rows){
 
         if(err) return done({"ERROR": "Error updating"});
@@ -221,7 +220,7 @@ exports.loginUser = function(req, done){
                 if(userDetails.length > 0){
 
                     if(userDetails[0].user_password === req.query.password) {
-                    loggedInUserId = userDetails[1];
+                    loggedInUserId = userDetails[0].user_id;
                     return done("Log in successful");
 
                 } else {
@@ -240,4 +239,64 @@ exports.loginUser = function(req, done){
 exports.logoutUser = function(done){
     loggedInUserId = null;
     return done("Logged out");
+};
+
+exports.getUser = function(req, done){
+
+    let searchQuery = ['SELECT user_username AS username, user_givenname AS givenName, ' +
+        'user_familyname AS familyName '];
+
+    if(loggedInUserId === parseInt(req.params['id'])){
+        searchQuery.push(', user_email AS email, user_accountbalance AS accountBalance ');
+    }
+
+    searchQuery.push('FROM auction_user ' +
+        'WHERE user_id=' + req.params['id']);
+
+    if(req.params['id']){
+        db.get_pool().query(searchQuery.join(''), function (err, rows) {
+
+            if (err) return done({"ERROR": "Error selecting"});
+
+            return done(rows);
+        });
+    } else {
+        return done("No ID entered");
+    }
+};
+
+
+exports.updateUser = function(body, req, done){
+    let searchQuery = ['UPDATE auction_user ' +
+    'SET user_id = user_id'];
+
+    if(body.username){
+        searchQuery.push(', user_username = "' + body.username + '"');
+    }
+
+    if(body.givenName){
+        searchQuery.push(', user_givenname = "' + body.givenName + '"');
+    }
+
+    if(body.familyName){
+        searchQuery.push(', user_familyname = "' + body.familyName + '"');
+    }
+
+    if(body.email){
+        searchQuery.push(', user_email = "' + body.email + '"');
+    }
+
+    if(body.password){
+        searchQuery.push(', user_password = "' + body.password + '"');
+    }
+
+    searchQuery.push(' WHERE user_id=' + req.params['id']);
+
+
+    db.get_pool().query(searchQuery.join(''), function (err, rows){
+
+        if(err) return done({"ERROR": "Error updating"});
+
+        return done(rows);
+    });
 };

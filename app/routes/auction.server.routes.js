@@ -27,4 +27,8 @@ module.exports = function(app){
 
     app.route('/user/logout')
         .post(auctions.logout);
+
+    app.route('/user/:id')
+        .get(auctions.findUser)
+        .patch(auctions.patchUser);
 };
