@@ -96,6 +96,9 @@ exports.getOne = function(req, res, done){
 };
 
 exports.insert = function(auction, res, done){
+
+    console.log(loggedInUserId);
+
     if(loggedInUserId == null){
         res.status(401);
         return done("Unauthorized");
@@ -307,9 +310,9 @@ exports.loginUser = function(req, res, done){
                 if(userDetails.length > 0){
 
                     if(userDetails[0].user_password === req.body.password) {
-                    loggedInUserId = userDetails[0].user_id;
-                    res.status(200);
-                    return done({id: loggedInUserId, token: userDetails[0].user_token});
+                        loggedInUserId = parseInt(userDetails[0].user_id);
+                        res.status(200);
+                        return done({id: loggedInUserId, token: userDetails[0].user_token});
 
                 } else {
                         res.status(400);
