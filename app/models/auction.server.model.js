@@ -97,8 +97,6 @@ exports.getOne = function(req, res, done){
 
 exports.insert = function(auction, res, done){
 
-    console.log(loggedInUserId);
-
     if(loggedInUserId == null){
         res.status(401);
         return done("Unauthorized");
@@ -122,8 +120,8 @@ exports.insert = function(auction, res, done){
             return done("Bad request.");
         }
 
-        res.status(200);
-        return done(result);
+        res.status(201);
+        return done({id: result.insertId});
     });
 };
 
@@ -199,7 +197,7 @@ exports.createBid = function(body, req, res, done){
                 return done("Bad request.");
             }
 
-            res.status(200);
+            res.status(201);
             return done(result);
         });
     } else {
@@ -295,11 +293,11 @@ exports.createUser = function(body, res, done){
 
 exports.loginUser = function(req, res, done){
 
-    if(req.body.password) {
+    if(req.query.password) {
 
         db.get_pool().query('SELECT user_password, user_id, user_token ' +
             'FROM auction_user ' +
-            'WHERE user_username="' + req.body.username + '" OR user_email="' + req.body.email + '" ',
+            'WHERE user_username="' + req.query.username + '" OR user_email="' + req.query.email + '" ',
             function (err, userDetails) {
 
                 if (err){
@@ -309,7 +307,7 @@ exports.loginUser = function(req, res, done){
 
                 if(userDetails.length > 0){
 
-                    if(userDetails[0].user_password === req.body.password) {
+                    if(userDetails[0].user_password === req.query.password) {
                         loggedInUserId = parseInt(userDetails[0].user_id);
                         res.status(200);
                         return done({id: loggedInUserId, token: userDetails[0].user_token});
@@ -426,7 +424,7 @@ exports.addPhoto = function(req, res, done){
             return done("Not found");
         }
 
-        if (parseInt(req.params['id']) !== parseInt(loggedInUserId)) {
+        if (parseInt(loggedInUserId) === null) {
             res.status(401);
             return done("Unauthorized");
         }
@@ -473,8 +471,10 @@ exports.getPhoto = function(req, res, done){
                 return done("Not found");
             }
 
-            let photoData = fs.readFileSync(result[0].photo_image_URI, 'utf8');
+            let photoData = fs.readFileSync(result[0].photo_image_URI);
 
+            res.status(200);
+            res.contentType('image/png');
             return done(photoData);
         });
     });
@@ -491,7 +491,7 @@ exports.removePhoto = function(req, res, done){
             return done("Not found");
         }
 
-        if (parseInt(req.params['id']) !== (loggedInUserId)) {
+        if (loggedInUserId === null) {
             res.status(401);
             return done("Unauthorized");
         }
@@ -504,6 +504,7 @@ exports.removePhoto = function(req, res, done){
                 return done("Bad request");
             }
 
+            res.status(201);
             return done(result);
         });
     });
