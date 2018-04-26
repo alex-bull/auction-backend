@@ -133,7 +133,7 @@ exports.reset = function(res, done){
         }
 
         res.status(200);
-        return done(rows);
+        return done("OK");
     });
 };
 
@@ -286,7 +286,7 @@ exports.createUser = function(body, res, done){
         }
 
         res.status(201);
-        return done(result);
+        return done({ id: result.insertId});
     });
 };
 
