@@ -1,39 +1,41 @@
 const auctions = require('../controllers/auction.server.controller');
 
+const API_VER = '/api/v1';
+
 module.exports = function(app){
-    app.route('/auctions')
+    app.route(API_VER + '/auctions')
         .get(auctions.list)
         .post(auctions.create);
 
-    app.route('/auctions/:id')
+    app.route(API_VER + '/auctions/:id')
         .get(auctions.findId)
         .patch(auctions.patchAuction);
 
-    app.route('/auctions/:id/bids')
+    app.route(API_VER + '/auctions/:id/bids')
         .get(auctions.findBids)
         .post(auctions.postBid);
 
-    app.route('/auctions/:id/photos')
+    app.route(API_VER + '/auctions/:id/photos')
         .post(auctions.postPhoto)
         .get(auctions.findPhoto)
         .delete(auctions.deletePhoto);
 
-    app.route('/reset')
+    app.route(API_VER + '/reset')
         .post(auctions.resetDB);
 
-    app.route('/resample')
+    app.route(API_VER + '/resample')
         .post(auctions.resampleDB);
 
-    app.route('/users')
+    app.route(API_VER + '/users')
         .post(auctions.postUser);
 
-    app.route('/users/login')
+    app.route(API_VER + '/users/login')
         .post(auctions.login);
 
-    app.route('/users/logout')
+    app.route(API_VER + '/users/logout')
         .post(auctions.logout);
 
-    app.route('/users/:id')
+    app.route(API_VER + '/users/:id')
         .get(auctions.findUser)
         .patch(auctions.patchUser);
 };

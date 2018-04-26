@@ -292,11 +292,11 @@ exports.createUser = function(body, res, done){
 
 exports.loginUser = function(req, res, done){
 
-    if(req.query.password) {
+    if(req.body.password) {
 
-        db.get_pool().query('SELECT user_password, user_id ' +
+        db.get_pool().query('SELECT user_password, user_id, user_token ' +
             'FROM auction_user ' +
-            'WHERE user_username="' + req.query.username + '" OR user_email="' + req.query.email + '" ',
+            'WHERE user_username="' + req.body.username + '" OR user_email="' + req.body.email + '" ',
             function (err, userDetails) {
 
                 if (err){
@@ -306,10 +306,10 @@ exports.loginUser = function(req, res, done){
 
                 if(userDetails.length > 0){
 
-                    if(userDetails[0].user_password === req.query.password) {
+                    if(userDetails[0].user_password === req.body.password) {
                     loggedInUserId = userDetails[0].user_id;
                     res.status(200);
-                    return done("Log in successful");
+                    return done({id: loggedInUserId, token: userDetails[0].user_token});
 
                 } else {
                         res.status(400);
@@ -369,7 +369,7 @@ exports.getUser = function(req, res, done){
 
 exports.updateUser = function(body, req, res, done){
 
-    if (parseInt(req.params['id']) !== parseInt(loggedInUserId)) {
+    if (loggedInUserId === null) {
         res.status(401);
         return done("Unauthorized");
     }
@@ -408,7 +408,7 @@ exports.updateUser = function(body, req, res, done){
         }
 
         res.status(201);
-        return done(rows);
+        return done("OK");
     });
 };
 
