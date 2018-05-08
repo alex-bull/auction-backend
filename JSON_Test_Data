@@ -20,3 +20,22 @@
   "reservePrice": 10.00,
   "startingBid": 0.01
 }
+
+
+{
+  	"categoryId" : 1,
+  	"title": "updated item",
+	"description": "an item that was updated",
+	"startDateTime": 1457740800000,
+	"endDateTime": 1457740800000,
+	"reservePrice": 2,
+	"startingBid": 2
+}
+
+{
+  "username": "me",
+  "givenName": "alex",
+  "familyName": "bull",
+  "email": "user@example.com",
+  "password": "moo"
+}
